@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from 'react-query';
-import { useNavigate } from 'react-router-dom';
+import { useMatch, useNavigate, PathMatch } from 'react-router-dom';
 import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getMovies, IGetMoviesResult } from '../api';
@@ -79,6 +79,15 @@ const Info = styled(motion.div)`
     font-size: 18px;
   }
 `;
+const Overlay = styled(motion.div)`
+  position: fixed;
+  top: 0;
+  width: 100%;
+  height: inherit;
+  background-color: rgba(0, 0, 0, 0.7);
+  opacity: 0;
+`;
+
 
 // Animation
 const rowVariants = {
@@ -99,8 +108,8 @@ const BoxVariants = {
     scale: 1.2, 
     y: -10, 
     transition: { 
-      delay: 0.5, 
-      duration: 0.5, 
+      delay: 0.2, 
+      duration: 0.3, 
       type: 'spring' 
     },
   },
@@ -109,19 +118,23 @@ const InfoVariants = {
   hover: {
     opacity: 1,
     transition: {
-      delay: 0.5,
-      duration: 0.1,
+      delay: 0.2,
+      duration: 0.2,
       type: "tween",
     },
   },
-
 };
+
 
 // 한번에 보여주고 싶은 영화의 수 = 6
 const offset = 6;
 
+
 const Home = () => {
+  // 선언
   const history = useNavigate();
+  const bigMovieMatch: PathMatch<string> | null = useMatch('/movies/:movieId');
+  console.log(bigMovieMatch);
   const {data, isLoading} = useQuery<IGetMoviesResult>(
     ['movies', 'nowPlaying'], 
     getMovies
@@ -129,11 +142,11 @@ const Home = () => {
   const [index, setIndex] = useState(0);
   const [leaving, setLeaving] = useState(false);
 
+  // 함수
   const increaseIndex = () => {
     if(data) {
       if(leaving) return;
       toggleLeaving();
-
       const totalMovies = data?.results.length - 1;
       const maxIndex = Math.floor(totalMovies / offset);
       setIndex((prev) => (prev === maxIndex ? 0 : prev + 1));
@@ -142,7 +155,8 @@ const Home = () => {
   const toggleLeaving = () => setLeaving((prev) => !prev);
   const onBoxClicked = (movieId: number) => {
     history(`/movies/${movieId}`);
-  }
+  };
+  const onOverlayClick = () => history(`/`);
 
   return (
     <Wrapper>
@@ -173,6 +187,7 @@ const Home = () => {
                   .map((movie) => (
                     <Box
                       key={movie.id}
+                      layoutId={movie.id+''}
                       onClick={() => onBoxClicked(movie.id)}
                       variants={BoxVariants}
                       initial='normal'
@@ -189,6 +204,29 @@ const Home = () => {
               </Row>
             </AnimatePresence>
           </Slider>
+          <AnimatePresence>
+            {bigMovieMatch ? (
+              <Overlay 
+                onClick={onOverlayClick} 
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <motion.div
+                layoutId={bigMovieMatch.params.movieId}
+                style={{
+                  position: 'absolute',
+                  width: '40vw',
+                  height: '80vh',
+                  backgroundColor: '#ccc',
+                  top: 50,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  margin: '0 auto',
+                }} />
+              </Overlay>
+            ) : null}
+          </AnimatePresence>
         </>
       )}
     </Wrapper>

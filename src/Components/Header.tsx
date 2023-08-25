@@ -140,7 +140,6 @@ const Header = () => {
       } else {
         navAnimation.start("top");
       }
-      console.log(scrollY.get());
     });
   }, [scrollY, navAnimation]);
 
