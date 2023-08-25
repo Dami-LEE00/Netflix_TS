@@ -85,6 +85,9 @@ const Input = styled(motion.input)`
   outline: none; 
   background-color: transparent;
   border: 1px solid ${(props) => props.theme.white.lighter};
+  &::placeholder {
+    color: #fff;
+  }
 `;
 
 // Animation
